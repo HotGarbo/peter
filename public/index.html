@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<title>Peter Alerts</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<meta name="description" content="nyeheheheheh look lois im in the computah" />
+	<meta property="og:type" content="website" />
+	<meta property="og:image" content="/apple-touch-icon.png">
+	<meta property="og:url" content="https://peter.hotgarba.ge">
+	<meta name="twitter:card" content="summary_large_image">
+	<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+	<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+	<link rel="icon" href="/apple-touch-icon.png">
+	<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+	<link rel="manifest" href="/manifest.json">
+	<style>
+		html {
+			overscroll-behavior: none;
+		}
+		body {
+			font-family: -apple-system, BlinkMacSystemFont, avenir next, avenir, segoe ui, helvetica neue, helvetica, Ubuntu, roboto, noto, arial, sans-serif;
+			margin: 0;
+			padding: 0;
+		}
+		#content {
+			display: flex;
+			flex-direction: column;
+			justify-content: center;
+			height: 100svh;
+			font-size: 10vmin;
+			gap: 1em;
+		}
+		#err {
+			align-self: flex-start;
+		}
+		#register {
+			width: 50vmin;
+			height: 50vmin;
+			padding: 0;
+		}
+		#register img {
+			width: 100%;
+			height: auto;
+			image-rendering: pixelated;
+		}
+		#github {
+			position: fixed;
+			bottom: 0;
+			right: 0;
+		}
+		@media (prefers-color-scheme: dark) {
+			* {
+				color: white;
+				background-color: black;
+			}
+			img#a2hs {
+				filter: invert(1);
+			}
+		}
+	</style>
+</head>
+
+<div id="content">
+	<div style='align-self: center'>
+		<button id='register' title='Register for Peter Alerts' style='display: none'>
+			<img width='32' height='32' src='peter.gif' alt='Peter Griffin'>
+		</button>
+	</div>
+</div>
+<div id='github'><a target="_blank" href="https://github.com/HotGarbo/peter">GitHub</a></div>
+
+<script>
+	const main = async () => {
+		const content = document.querySelector('#content');
+		let sw, sub;
+		try {
+			if (!navigator.serviceWorker) {
+				throw new Error("Service Workers not supported");
+			}
+			// iOS 16.4 requires web apps to be installed on the home screen to enable push notifications.
+			// iOS 16.4 also added screen.orientation, so use that for feature detection
+			if (["iPhone", "iPad"].includes(navigator.platform) && screen.orientation && !window.PushManager) {
+				content.innerHTML = `<div>Peter Alerts must be installed to and opened from the home screen.</div>`;
+				content.innerHTML += `<div>Tap <svg alt="share icon" xmlns="http://www.w3.org/2000/svg" viewBox="10 5 30 35" style="height: .8em; fill: #4693FF"><path d="M30.3 13.7L25 8.4l-5.3 5.3-1.4-1.4L25 5.6l6.7 6.7z"/><path d="M24 7h2v21h-2z"/><path d="M35 40H15c-1.7 0-3-1.3-3-3V19c0-1.7 1.3-3 3-3h7v2h-7c-.6 0-1 .4-1 1v18c0 .6.4 1 1 1h20c.6 0 1-.4 1-1V19c0-.6-.4-1-1-1h-7v-2h7c1.7 0 3 1.3 3 3v18c0 1.7-1.3 3-3 3z"/></svg> then <img id="a2hs" alt="add to home screen" src='a2hs.jpg' width="750" height="120" style='height: 1.5em; width: auto; vertical-align: middle'></div>`;
+				return;
+			}
+			sw = await navigator.serviceWorker.register('worker.js');
+			if (!sw.pushManager) {
+				throw new Error("Push API not supported");
+			}
+			sub = await sw.pushManager.getSubscription();
+		} catch (err) {
+			content.innerHTML = `Peter Alerts not supported: ${err.message}`;
+			return;
+		}
+		if (sub) {
+			content.innerHTML = "You are registered for Peter Alerts";
+			return;
+		}
+		let regBtn = content.querySelector('#register');
+		regBtn.onclick = async () => {
+			const key = await fetch('/api/key').then(r => r.text());
+			try {
+				sub = await sw.pushManager.subscribe({
+					userVisibleOnly: true,
+					applicationServerKey: key
+				});
+			} catch (err) {
+				content.innerHTML = err.message;
+				return;
+			}
+			const res = await fetch('/api/register', {
+				method: 'POST',
+				body: JSON.stringify(sub)
+			});
+			if (res.status != 200) {
+				const err = await res.text();
+				content.innerHTML = `Registration failed: ${err}`;
+			} else {
+				content.innerHTML = "You are now registered for Peter Alerts";
+			}
+		}
+		regBtn.style.display = '';
+	}
+	main();
+</script>
