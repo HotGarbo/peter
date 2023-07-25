@@ -15,3 +15,6 @@ Can be deployed with `wrangler pages publish public/` assuming you have a Cloudf
 `wranger.toml` doesn't seem to work, so you need to manually add a `PETERS` KV namespace and `SERVER_KEY` and `SUB` environment vars:
  - `SERVER_KEY` is a JWK and can be generated ala https://github.com/K0IN/Notify/blob/277ae6a8154480fcfd808d57afa63b3f946b7695/helper/browser.js
  - `SUB` is an email address Mozilla, Apple, or Google can use to contact you when they get sick of your shit.
+
+---
+A <a href="https://www.hotgarba.ge">Hot Garbage</a> project
